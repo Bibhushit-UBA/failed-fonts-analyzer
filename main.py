@@ -9,9 +9,6 @@ from download_fonts import download_all_fonts
 from metadata_check import check_metadata_availability
 from status_check import check_asset_status
 
-# ── Input ─────────────────────────────────────────────────────────────────────
-INPUT_FILE = "OneFailed.xlsx"  # Set to a file path or folder path
-# ──────────────────────────────────────────────────────────────────────────────
 
 
 def read_input_file(input_path: str) -> pd.DataFrame:
@@ -109,8 +106,13 @@ def process_input(input_path: str) -> None:
 
 
 if __name__ == "__main__":
-    target = sys.argv[1] if len(sys.argv) >= 2 else INPUT_FILE
+    if len(sys.argv) >= 2:
+        target = sys.argv[1]
+    else:
+        target = input("Enter file or folder path: ").strip()
+
     if not target:
-        print("Usage: python main.py <file_or_folder_path>")
+        print("Error: No path provided.")
         sys.exit(1)
+
     process_input(target)

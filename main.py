@@ -22,7 +22,7 @@ def read_input_file(input_path: str) -> pd.DataFrame:
         sys.exit(1)
 
 
-def process_file(input_path: str) -> None:
+def process_file(input_path: str, download_fonts: bool = True) -> None:
     filename = os.path.basename(input_path)
     name_without_ext = os.path.splitext(filename)[0]
 
@@ -61,27 +61,28 @@ def process_file(input_path: str) -> None:
     # ── Output folders ─────────────────────────────────────────────────────────
     base_dir = os.path.dirname(os.path.abspath(input_path))
     output_folder = os.path.join(base_dir, f"UNIQUE {name_without_ext}")
-    downloads_folder = os.path.join(output_folder, "Downloaded Files")
     os.makedirs(output_folder, exist_ok=True)
-    os.makedirs(downloads_folder, exist_ok=True)
 
     # ── Font downloads ─────────────────────────────────────────────────────────
-    file_sizes = download_all_fonts(unique_df, downloads_folder)
-    unique_df["FILE SIZE"] = file_sizes
+    if download_fonts:
+        downloads_folder = os.path.join(output_folder, "Downloaded Files")
+        os.makedirs(downloads_folder, exist_ok=True)
+        file_sizes = download_all_fonts(unique_df, downloads_folder)
+        unique_df["FILE SIZE"] = file_sizes
+        downloaded = sum(1 for s in file_sizes if not s.startswith("N/A"))
+        download_summary = f"{downloaded}/{len(unique_df)} fonts downloaded."
+    else:
+        download_summary = "Font download skipped."
 
     # ── Save output ────────────────────────────────────────────────────────────
     shutil.copy2(input_path, os.path.join(output_folder, filename))
     output_csv = os.path.join(output_folder, f"Unique {name_without_ext}.csv")
     unique_df.to_csv(output_csv, index=False)
 
-    downloaded = sum(1 for s in file_sizes if not s.startswith("N/A"))
-    print(
-        f"  Done. {len(unique_df)} unique records written. "
-        f"{downloaded}/{len(unique_df)} fonts downloaded."
-    )
+    print(f"  Done. {len(unique_df)} unique records written. {download_summary}")
 
 
-def process_input(input_path: str) -> None:
+def process_input(input_path: str, download_fonts: bool = True) -> None:
     if os.path.isdir(input_path):
         files = [
             os.path.join(input_path, f)
@@ -94,11 +95,11 @@ def process_input(input_path: str) -> None:
         print(f"Found {len(files)} file(s) in '{input_path}':")
         for f in sorted(files):
             print(f"  Processing: {os.path.basename(f)}")
-            process_file(f)
+            process_file(f, download_fonts)
 
     elif os.path.isfile(input_path):
         print(f"Processing: {os.path.basename(input_path)}")
-        process_file(input_path)
+        process_file(input_path, download_fonts)
 
     else:
         print(f"Error: '{input_path}' is not a valid file or folder.")
@@ -115,4 +116,6 @@ if __name__ == "__main__":
         print("Error: No path provided.")
         sys.exit(1)
 
-    process_input(target)
+    should_download = input("Download font files? (y/n): ").strip().lower() == "y"
+
+    process_input(target, download_fonts=should_download)

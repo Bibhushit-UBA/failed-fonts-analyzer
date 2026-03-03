@@ -5,6 +5,7 @@ import sys
 import pandas as pd
 
 from config import SUPPORTED_EXTENSIONS
+from count_by_type import get_file_type_summary
 from download_fonts import download_all_fonts
 from metadata_check import check_metadata_availability
 from status_check import check_asset_status
@@ -75,9 +76,14 @@ def process_file(input_path: str, download_fonts: bool = True) -> None:
         download_summary = "Font download skipped."
 
     # ── Save output ────────────────────────────────────────────────────────────
+    summary_df = get_file_type_summary(unique_df)
+
     shutil.copy2(input_path, os.path.join(output_folder, filename))
-    output_csv = os.path.join(output_folder, f"Unique {name_without_ext}.csv")
-    unique_df.to_csv(output_csv, index=False)
+    output_xlsx = os.path.join(output_folder, f"Unique {name_without_ext}.xlsx")
+
+    with pd.ExcelWriter(output_xlsx, engine="openpyxl") as writer:
+        unique_df.to_excel(writer, sheet_name="Unique Fonts", index=False)
+        summary_df.to_excel(writer, sheet_name="File Type Summary", index=False)
 
     print(f"  Done. {len(unique_df)} unique records written. {download_summary}")
 

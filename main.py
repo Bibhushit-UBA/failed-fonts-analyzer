@@ -17,7 +17,7 @@ def read_input_file(input_path: str) -> pd.DataFrame:
     if ext == ".csv":
         return pd.read_csv(input_path)
     elif ext in (".xlsx", ".xls"):
-        return pd.read_excel(input_path)
+        return pd.read_excel(input_path, engine="openpyxl")
     else:
         print(f"Error: Unsupported file type '{ext}'. Use .csv, .xlsx, or .xls.")
         sys.exit(1)

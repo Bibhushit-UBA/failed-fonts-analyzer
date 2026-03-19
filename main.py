@@ -35,7 +35,12 @@ def process_file(input_path: str, download_fonts: bool = True) -> None:
         print(f"  Error: Missing columns in '{filename}': {missing}. Skipping.")
         return
 
-    unique_df = df.drop_duplicates(subset=["Font File Name"])[required_columns].copy()
+    unique_df = (
+        df.drop_duplicates(subset=["Font File Name"])
+        .dropna(subset=["Font File Name"])
+        [required_columns]
+        .copy()
+    )
 
     # ── Build md5 → font name mapping ─────────────────────────────────────────
     md5_to_fontnames: dict[str, list[str]] = {}
@@ -57,6 +62,9 @@ def process_file(input_path: str, download_fonts: bool = True) -> None:
     )
     unique_df["Curl Status Check"] = unique_df["MD5"].astype(str).map(
         lambda x: md5_to_status[x][1] if x in md5_to_status else ""
+    )
+    unique_df["Font Read Error"] = unique_df["MD5"].astype(str).map(
+        lambda x: md5_to_status[x][2] if x in md5_to_status else ""
     )
 
     # ── Output folders ─────────────────────────────────────────────────────────

@@ -20,7 +20,7 @@ METADATA_API = "https://fbms-itw.monotype.com/font/{md5s}/metadata"
 METADATA_BATCH_SIZE = 20
 
 STATUS_API = "https://asset-itw.monotype.com/asset/status"
-STATUS_SOURCE = "c85706a6-6ed0-476c-b259-395c5144dcc8"
+STATUS_SOURCE = "c9b3e4a1-7f6d-4c2a-9a0b-5d8a1e2f6c91"
 STATUS_CONSUMER_ID = "fms"
 
 # Update all __cf_bm and _cfuvid values when Cloudflare tokens expire

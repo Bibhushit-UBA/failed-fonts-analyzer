@@ -75,10 +75,10 @@ def check_metadata_availability(md5_to_fontnames: dict[str, list[str]]) -> set[s
     return found_font_names
 
 
-def check_asset_status(md5_list: list[str]) -> dict[str, tuple[str, str]]:
+def check_asset_status(md5_list: list[str]) -> dict[str, tuple[str, str, str]]:
     """Runs the status check via curl (subprocess) and returns md5 -> status dict."""
     unique_md5s = list(dict.fromkeys(md5_list))
-    md5_to_status: dict[str, str] = {}
+    md5_to_status: dict[str, tuple[str, str, str]] = {}
 
     body = json.dumps({"mdFives": unique_md5s})
     curl_cmd = [
@@ -103,7 +103,14 @@ def check_asset_status(md5_list: list[str]) -> dict[str, tuple[str, str]]:
                 status_code = str(item.get("statusCode", ""))
                 av_check = item.get("avCheckResult")
                 av_status = str(av_check.get("status", "")) if isinstance(av_check, dict) else ""
-                md5_to_status[key] = (status_code, av_status)
+                charset = item.get("characterset")
+                charset_error = str(charset.get("error", "")) if isinstance(charset, dict) else ""
+                font_read_error = (
+                    charset_error
+                    if "unable to read font" in charset_error.lower()
+                    else ""
+                )
+                md5_to_status[key] = (status_code, av_status, font_read_error)
     except Exception as e:
         print(f"  Warning: Curl status check call failed: {e}")
 
@@ -187,6 +194,9 @@ def process_file(input_path: str):
     )
     unique_df["Curl Status Check"] = unique_df["MD5"].astype(str).map(
         lambda x: md5_to_status[x][1] if x in md5_to_status else ""
+    )
+    unique_df["Font Read Error"] = unique_df["MD5"].astype(str).map(
+        lambda x: md5_to_status[x][2] if x in md5_to_status else ""
     )
 
     base_dir = os.path.dirname(os.path.abspath(input_path))
